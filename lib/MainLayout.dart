@@ -57,9 +57,6 @@ class _MainLayoutState extends State<MainLayout> {
             testSvgWidget,  // เรียกใช้จาก global variable
           ],
         ),
-        actions: [
-          IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
-        ],
       ),
       body: widget.child,
       bottomNavigationBar: BottomAppBar(
