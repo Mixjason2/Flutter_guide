@@ -381,13 +381,12 @@ class _JobsListPageState extends State<JobsListPage> {
                               ),
                             ),
                             child: ExpansionTile(
+                              key: Key('$pnr-$page'), // ✅ เพิ่มตรงนี้
                               title: Center(
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: Text(
-                                    formatDate(
-                                      list.first.pnrDate,
-                                    ), // แสดงวันที่แบบ DD/MMM/YYYY ตรงกลาง
+                                    formatDate(list.first.pnrDate),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -395,7 +394,7 @@ class _JobsListPageState extends State<JobsListPage> {
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.visible,
                                     softWrap: true,
-                                    maxLines: 2, // ถ้ายาวจะขึ้นบรรทัดใหม่
+                                    maxLines: 2,
                                   ),
                                 ),
                               ),
@@ -487,14 +486,22 @@ class _JobsListPageState extends State<JobsListPage> {
                     children: [
                       TextButton(
                         onPressed: page > 1
-                            ? () => setState(() => page--)
+                            ? () => setState(() {
+                                page--;
+                                expandedPNRs
+                                    .clear(); // ✅ พับทุก PNR เมื่อเปลี่ยนหน้า
+                              })
                             : null,
                         child: const Text('Prev'),
                       ),
                       Text('$page / $totalPages'),
                       TextButton(
                         onPressed: page < totalPages
-                            ? () => setState(() => page++)
+                            ? () => setState(() {
+                                page++;
+                                expandedPNRs
+                                    .clear(); // ✅ พับทุก PNR เมื่อเปลี่ยนหน้า
+                              })
                             : null,
                         child: const Text('Next'),
                       ),
