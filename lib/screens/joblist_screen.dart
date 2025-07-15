@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../MainLayout.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../components/date_picker_row.dart';
+import '../components/job_group_card.dart';
+import '../components/pagination_control.dart';
 
 class Job {
   final String pnrDate;
@@ -258,104 +261,10 @@ class _JobsListPageState extends State<JobsListPage> {
                     vertical: 12,
                     horizontal: 16,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Start Date Picker
-                      Text(
-                        'Start: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: startDate,
-                            firstDate: DateTime(2000),
-                            lastDate:
-                                endDate.isAfter(
-                                  startDate.add(Duration(days: 91)),
-                                )
-                                ? startDate.add(Duration(days: 91))
-                                : endDate,
-                          );
-                          if (picked != null && picked != startDate) {
-                            // ✅ ตรวจว่าระยะเกิน 91 วันไหม แล้วขยับ endDate ถ้าจำเป็น
-                            DateTime adjustedEnd = endDate;
-                            final maxRange = Duration(days: 91);
-                            if (endDate.difference(picked) > maxRange) {
-                              adjustedEnd = picked.add(maxRange);
-                            }
-
-                            _onDateRangeChanged(picked, adjustedEnd);
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blue.shade200),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}",
-                            style: TextStyle(color: Colors.blue.shade900),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(width: 16),
-                      // End Date Picker
-                      Text(
-                        'End: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDateRangePicker(
-                            context: context,
-                            initialDateRange: DateTimeRange(
-                              start: startDate,
-                              end: endDate,
-                            ),
-                            firstDate: DateTime.now().subtract(
-                              Duration(days: 365),
-                            ),
-                            lastDate: DateTime.now().add(Duration(days: 365)),
-                          );
-
-                          if (picked != null) {
-                            DateTime newStart = picked.start;
-                            DateTime newEnd = picked.end;
-
-                            final maxRange = Duration(days: 91);
-
-                            // ถ้าระยะเกิน 91 วัน ให้ขยับ endDate ใหม่เป็น startDate + 91 วัน
-                            if (newEnd.difference(newStart) > maxRange) {
-                              newEnd = newStart.add(maxRange);
-                            }
-
-                            _onDateRangeChanged(newStart, newEnd);
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.blue.shade200),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}",
-                            style: TextStyle(color: Colors.blue.shade900),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: DatePickerRow(
+                    startDate: startDate,
+                    endDate: endDate,
+                    onDateRangeChanged: _onDateRangeChanged,
                   ),
                 ),
                 Expanded(
@@ -367,113 +276,17 @@ class _JobsListPageState extends State<JobsListPage> {
                       return Center(
                         child: Container(
                           width: 500,
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 8,
-                            ),
-                            elevation: 6,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: Colors.blue.shade100,
-                                width: 2,
-                              ),
-                            ),
-                            child: ExpansionTile(
-                              key: Key('$pnr-$page'), // ✅ เพิ่มตรงนี้
-                              title: Center(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    formatDate(list.first.pnrDate),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.visible,
-                                    softWrap: true,
-                                    maxLines: 2,
-                                  ),
-                                ),
-                              ),
-                              initiallyExpanded: expanded,
-                              onExpansionChanged: (e) {
-                                setState(() {
-                                  expandedPNRs[pnr] = e;
-                                  if (e) detailJobs = list;
-                                });
-                              },
-                              children: list.map((job) {
-                                return ListTile(
-                                  title: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'PNR: ${job.pnr}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Pickup: ',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            // <--- ให้ขยายและห่อข้อความ
-                                            child: Text(
-                                              '${job.pickup}  (${formatDate(job.pickupDate)})',
-                                              softWrap: true,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 4),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Dropoff: ',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              '${job.dropoff}  (${formatDate(job.dropoffDate)})',
-                                              softWrap: true,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Pax: ',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text('${job.pax}'),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                          child: JobGroupCard(
+                            pnr: pnr,
+                            jobs: list,
+                            expanded: expanded,
+                            onExpansionChanged: (e) {
+                              setState(() {
+                                expandedPNRs[pnr] = e;
+                                if (e) detailJobs = list;
+                              });
+                            },
+                            formatDate: formatDate,
                           ),
                         ),
                       );
@@ -481,31 +294,17 @@ class _JobsListPageState extends State<JobsListPage> {
                   ),
                 ),
                 if (!(showConfirmedOnly || showNewOnly || showPendingOnly))
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        onPressed: page > 1
-                            ? () => setState(() {
-                                page--;
-                                expandedPNRs
-                                    .clear(); // ✅ พับทุก PNR เมื่อเปลี่ยนหน้า
-                              })
-                            : null,
-                        child: const Text('Prev'),
-                      ),
-                      Text('$page / $totalPages'),
-                      TextButton(
-                        onPressed: page < totalPages
-                            ? () => setState(() {
-                                page++;
-                                expandedPNRs
-                                    .clear(); // ✅ พับทุก PNR เมื่อเปลี่ยนหน้า
-                              })
-                            : null,
-                        child: const Text('Next'),
-                      ),
-                    ],
+                  PaginationControl(
+                    currentPage: page,
+                    totalPages: totalPages,
+                    onPrev: () => setState(() {
+                      page--;
+                      expandedPNRs.clear();
+                    }),
+                    onNext: () => setState(() {
+                      page++;
+                      expandedPNRs.clear();
+                    }),
                   ),
                 if ((showConfirmedOnly || showNewOnly || showPendingOnly))
                   TextButton(
