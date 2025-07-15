@@ -8,19 +8,17 @@ final secureStorage = FlutterSecureStorage();
 
 // บันทึก token
 Future<void> saveToken(String token) async {
-  await secureStorage.write(key: 'accessToken', value: token);
-  // ถ้ามี refresh token ก็แยกเก็บได้
-  // await secureStorage.write(key: 'refreshToken', value: refreshToken);
+  await secureStorage.write(key: 'auth_token', value: token);
 }
 
 // อ่าน token
 Future<String?> readToken() async {
-  return await secureStorage.read(key: 'accessToken');
+  return await secureStorage.read(key: 'auth_token');
 }
 
 // ลบ token
 Future<void> deleteToken() async {
-  await secureStorage.delete(key: 'accessToken');
+  await secureStorage.delete(key: 'auth_token');
 }
 
 class LoginPage extends StatefulWidget {
