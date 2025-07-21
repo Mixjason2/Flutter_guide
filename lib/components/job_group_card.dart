@@ -15,7 +15,6 @@ class JobGroupCard extends StatelessWidget {
     required this.expanded,
     required this.onExpansionChanged,
     required this.formatDate,
-    super.key,
   });
 
   @override
@@ -30,23 +29,59 @@ class JobGroupCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.blue.shade100, width: 2),
           ),
-          child: ExpansionTile(
-            key: Key('$pnr'),
-            title: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  formatDate(jobs.first.pnrDate),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          child: Stack(
+            children: [
+              ExpansionTile(
+                key: Key('$pnr'),
+                title: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      formatDate(jobs.first.pnrDate),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: const Color.fromARGB(255, 7, 51, 87),
+                      ),
+                    ),
+                  ),
+                ),
+                initiallyExpanded: expanded,
+                onExpansionChanged: onExpansionChanged,
+                trailing: SizedBox.shrink(), // <-- ตรงนี้คือเอาลูกศรออก
+                children: jobs
+                    .map(
+                      (job) => JobDetailTile(job: job, formatDate: formatDate),
+                    )
+                    .toList(),
+              ),
+
+              // ปุ่ม info วางที่มุมขวาบน
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: Icon(Icons.info_outline, color: Colors.blue.shade700),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text('PNR: $pnr'),
+                        content: Text(
+                          'แสดงรายละเอียดเพิ่มเติมที่คุณต้องการตรงนี้ได้เลย',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: Text('ปิด'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
-            initiallyExpanded: expanded,
-            onExpansionChanged: onExpansionChanged,
-            children: jobs
-                .map((job) =>
-                    JobDetailTile(job: job, formatDate: formatDate))
-                .toList(),
+            ],
           ),
         ),
       ),
